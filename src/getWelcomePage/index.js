@@ -1,17 +1,42 @@
-const fs = require('fs');
-exports.handler = async event => {
-  // Log http request
-  console.log(event);
+var express        = require('express'),
+    bodyParser     = require('body-parser'),
+    methodOverride = require('method-override'),
+    errorHandler   = require('errorhandler'),
+    morgan         = require('morgan'),
+    routes         = require('./backend'),
+    api            = require('./backend/api');
 
-  const responseBody = fs.readFileSync('./welcome.html', 'utf8');
-  // Build an HTTP response.
-  const response = {
-    statusCode: 200,
-    headers: {
-      'Content-Type': 'text/html'
-    },
-    body: responseBody
-  };
+var app = module.exports = express();
 
-  return response;
-};
+app.engine('html', require('ejs').renderFile);
+app.set('view engine', 'html');
+app.use(morgan('dev'));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(methodOverride());
+app.use(express.static(__dirname + '/'));
+app.use('/build', express.static('public'));
+
+var env = process.env.NODE_ENV;
+if ('development' == env) {
+  app.use(errorHandler({
+    dumpExceptions: true,
+    showStack: true
+  }));
+}
+
+if ('production' == app.get('env')) {
+  app.use(errorHandler());
+}
+app.get('/hello', (req, res) => {
+  res.send('Hello worlds \n');
+});
+
+app.get('/', routes.index);
+app.get('/api/events', api.events);
+app.post('/api/events', api.event);
+app.delete('/api/events/:eventId', api.event);
+const PORT = 5000;
+const HOST = '0.0.0.0';
+app.listen(PORT, HOST);
+console.log('Magic happens on port 8080...');

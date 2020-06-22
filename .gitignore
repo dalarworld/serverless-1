@@ -1,0 +1,6 @@
+src\getWelcomePage\node_modules
+.aws
+.git
+.vscode
+.stackery
+nod_modules
