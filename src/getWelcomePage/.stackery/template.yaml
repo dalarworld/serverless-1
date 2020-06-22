@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Stackery Serverless API Example Stack
+Parameters:
+  StackeryEnvironmentAPIGatewayStageName:
+    Description: Environment name used for API Gateway Stage names (injected by Stackery
+      at deployment time)
+    Type: String
+  StackeryEnvironmentTagName:
+    Description: Environment Name (injected by Stackery at deployment time)
+    Type: String
+  StackeryStackTagName:
+    Description: Stack Name (injected by Stackery at deployment time)
+    Type: String
+Resources:
+  api:
+    Properties:
+      DefinitionBody:
+        info: {}
+        paths:
+          /:
+            get:
+              responses: {}
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${getWelcomePage.Arn}/invocations
+        swagger: "2.0"
+      EndpointConfiguration: REGIONAL
+      Name:
+        Fn::Sub:
+        - ${ResourceName} From Stackery Stack ${StackeryStackTagName} Environment
+          ${StackeryEnvironmentTagName}
+        - ResourceName: api
+      StageName:
+        Ref: StackeryEnvironmentAPIGatewayStageName
+    Type: AWS::Serverless::Api
+  getWelcomePage:
+    Metadata:
+      StackeryName: getWelcomePage
+    Properties:
+      CodeUri: ../src/getWelcomePage
+      Description:
+        Fn::Sub:
+        - Stackery Stack ${StackeryStackTagName} Environment ${StackeryEnvironmentTagName}
+          Function ${ResourceName}
+        - ResourceName: getWelcomePage
+      Environment:
+        Variables:
+          AWS_ACCESS_KEY_ID: to_be_overridden_by_stackery
+          AWS_DEFAULT_REGION: to_be_overridden_by_stackery
+          AWS_REGION: to_be_overridden_by_stackery
+          AWS_SECRET_ACCESS_KEY: to_be_overridden_by_stackery
+          AWS_SESSION_TOKEN: to_be_overridden_by_stackery
+      Events:
+        apiGET:
+          Properties:
+            Method: GET
+            Path: /
+            RestApiId:
+              Ref: api
+          Type: Api
+      FunctionName:
+        Fn::Sub: ${AWS::StackName}-getWelcomePage
+      Handler: index.handler
+      MemorySize: 3008
+      Policies:
+      - AWSXrayWriteOnlyAccess
+      Runtime: nodejs12.x
+      Timeout: 30
+      Tracing: Active
+    Type: AWS::Serverless::Function
+Transform: AWS::Serverless-2016-10-31
