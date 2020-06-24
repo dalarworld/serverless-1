@@ -16,13 +16,15 @@ app.use(bodyParser.json());
 app.use(methodOverride());
 app.use(express.static(__dirname + '/'));
 app.use('/build', express.static('public'));
+module.exports = app;
 
+/*
 var env = process.env.NODE_ENV;
 if ('development' == env) {
   app.use(errorHandler({
     dumpExceptions: true,
     showStack: true
-  }));
+  }));*/
 }
 
 if ('production' == app.get('env')) {
@@ -38,5 +40,6 @@ app.post('/api/events', api.event);
 app.delete('/api/events/:eventId', api.event);
 const PORT = 5000;
 const HOST = '0.0.0.0';
-app.listen(PORT, HOST);
-console.log('Magic happens on port 8080...');
+
+//app.listen(PORT, HOST);
+//console.log('Magic happens on port 8080...');
